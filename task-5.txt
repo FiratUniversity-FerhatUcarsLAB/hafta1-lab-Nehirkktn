@@ -1,4 +1,186 @@
-Öğrenci No:
-AD-SOYAD:
+Öğrenci No: 250541039
+AD-SOYAD:Nehir KÖKTEN
 
 Lütfen seçtiğiniz algoritmaya ait çözümü ve diğer isterleri aşağıya ekleyiniz:
+
+// =============================================================================
+// ANA FONKSİYON: Tüm süreci başlatan ve yöneten ana fonksiyon
+// =============================================================================
+FONKSIYON OLUSTUR_HAFTALIK_MENU(KullaniciProfili, KilerEnvanteri, ReceteVeritabani)
+
+  // Adım 1: Evdeki ve kullanıcının zevkine uygun temel malzemeleri belirle.
+  cekirdekBilesenler = FONKSIYON cekirdekBilesenleriBelirle(KilerEnvanteri, KullaniciProfili)
+
+  // Adım 2: Diyet, zaman ve yetenek kısıtlarına göre potansiyel reçeteleri filtrele.
+  uygunReceteler = FONKSIYON potansiyelReceteleriFiltrele(ReceteVeritabani, KullaniciProfili, cekirdekBilesenler)
+
+  // Adım 3: En az israfla 7 günlük optimal menüyü oluştur.
+  haftalikMenu = FONKSIYON optimalMenuyuOlustur(uygunReceteler, KilerEnvanteri, KullaniciProfili)
+
+  // Adım 4: Oluşturulan menüye göre eksik malzemeler için alışveriş listesi hazırla.
+  alisverisListesi = FONKSIYON alisverisListesiOlustur(haftalikMenu, KilerEnvanteri)
+
+  // Çıktı olarak menüyü ve listeyi döndür.
+  DÖNDÜR {haftalikMenu, alisverisListesi}
+
+SON FONKSIYON
+
+
+// =============================================================================
+// ALT FONKSİYONLAR: Ana fonksiyon tarafından kullanılan yardımcı fonksiyonlar
+// =============================================================================
+
+// --- Adım 1 için Fonksiyon ---
+FONKSIYON cekirdekBilesenleriBelirle(KilerEnvanteri, KullaniciProfili)
+  
+  cekirdekBilesenler = []
+
+  // Kilerdeki her bir malzemeyi kontrol et
+  DÖNGÜ KilerEnvanteri'ndeki her malzeme İÇİN
+    // KOŞUL: Raf ömrü azalan malzemelere öncelik ver
+    EĞER malzeme.rafOmru < 3 GÜN İSE
+      cekirdekBilesenler.ekle(malzeme)
+    SON EĞER
+  SON DÖNGÜ
+
+  // Kullanıcının favori mutfağına uygun "joker" malzemeleri ekle (soğan, sarımsak vb.)
+  jokerMalzemeler = KullaniciProfili.favoriMutfak.temelMalzemeler
+  cekirdekBilesenler.ekle(jokerMalzemeler)
+
+  DÖNDÜR cekirdekBilesenler
+SON FONKSIYON
+
+
+// --- Adım 2 için Fonksiyon ---
+FONKSIYON potansiyelReceteleriFiltrele(ReceteVeritabani, KullaniciProfili, cekirdekBilesenler)
+  
+  uygunReceteler = []
+
+  DÖNGÜ ReceteVeritabani'ndaki her recete İÇİN
+    diyetUygun = recete.diyetKisitlari.hepsi(KullaniciProfili.diyetKisitlari) İÇİNDE Mİ
+    zamanVeYetenekUygun = (recete.sure <= KullaniciProfili.maksimumSure) VE (recete.zorluk <= KullaniciProfili.mutfakYeteneği)
+    cekirdekMalzemeUygun = recete.malzemeler.enAzBiriniIceriyorMu(cekirdekBilesenler)
+    
+    // Tüm koşullar sağlanıyorsa listeye ekle
+    EĞER diyetUygun VE zamanVeYetenekUygun VE cekirdekMalzemeUygun İSE
+      uygunReceteler.ekle(recete)
+    SON EĞER
+  SON DÖNGÜ
+
+  DÖNDÜR uygunReceteler
+SON FONKSIYON
+
+
+// --- Adım 3 için Fonksiyon (Algoritmanın Kalbi) ---
+FONKSIYON optimalMenuyuOlustur(uygunReceteler, KilerEnvanteri, KullaniciProfili)
+
+  haftalikMenu = []
+  geciciKiler = KilerEnvanteri.kopyala() // Malzemeleri sanal olarak tüketmek için kopyala
+
+  // Haftanın 7 günü için döngü
+  DÖNGÜ gun = 1'DEN 7'YE KADAR
+    
+    enIyiRecete = NULL
+    enYuksekSkor = -1 // Mümkün olan en düşük skorla başla
+
+    // O gün için en uygun reçeteyi bulmak üzere tüm reçeteleri tara
+    DÖNGÜ uygunReceteler'deki her recete İÇİN
+      
+      israfMinimizasyonSkoru = hesaplaIsrafSkoru(recete, geciciKiler)
+      lezzetUygunlukSkoru = hesaplaLezzetSkoru(recete, KullaniciProfili)
+      
+      // Ağırlıklı ortalama ile toplam skoru hesapla
+      toplamSkor = (israfMinimizasyonSkoru * 0.6) + (lezzetUygunlukSkoru * 0.4)
+      
+      // KOŞUL: Eğer bu reçetenin skoru, şimdiye kadarki en yüksek skordan daha iyiyse
+      EĞER toplamSkor > enYuksekSkor İSE
+        enYuksekSkor = toplamSkor
+        enIyiRecete = recete
+      SON EĞER
+    SON DÖNGÜ
+    
+    // Günün en iyi reçetesi bulunduktan sonra:
+    EĞER enIyiRecete != NULL İSE
+      haftalikMenu.ekle({gun: gun, yemek: enIyiRecete})
+      geciciKileriGuncelle(geciciKiler, enIyiRecete.malzemeler) // Sanal kilerden malzemeleri düş
+      uygunReceteler.kaldir(enIyiRecete) // Reçeteyi tekrar seçme
+    DEĞİLSE
+      haftalikMenu.ekle({gun: gun, yemek: "Dinlenme Günü"})
+    SON EĞER
+    
+  SON DÖNGÜ
+  
+  DÖNDÜR haftalikMenu
+SON FONKSIYON
+
+
+// --- Adım 4 için Fonksiyon ---
+FONKSIYON alisverisListesiOlustur(haftalikMenu, KilerEnvanteri)
+  
+  toplamGerekenler = {} // Malzeme adı ve miktarını tutan bir sözlük/map
+
+  // Haftalık menüdeki tüm yemeklerin malzeme ihtiyaçlarını topla
+  DÖNGÜ haftalikMenu'deki her gunlukYemek İÇİN
+    DÖNGÜ gunlukYemek.recete.malzemeler'deki her malzeme İÇİN
+      EĞER toplamGerekenler.iceriyorMu(malzeme.ad) İSE
+        toplamGerekenler[malzeme.ad] += malzeme.miktar
+      DEĞİLSE
+        toplamGerekenler[malzeme.ad] = malzeme.miktar
+      SON EĞER
+    SON DÖNGÜ
+  SON DÖNGÜ
+  
+  alisverisListesi = []
+  
+  // Toplam gerekenler ile evdekileri karşılaştır
+  DÖNGÜ toplamGerekenler'deki her malzeme İÇİN
+    evdekiMiktar = KilerEnvanteri.getMiktar(malzeme.ad, 0) // Evde yoksa 0 kabul et
+    
+    // KOŞUL: Evdeki miktar yetersizse
+    EĞER malzeme.miktar > evdekiMiktar İSE
+      alinacakMiktar = malzeme.miktar - evdekiMiktar
+      alisverisListesi.ekle({ad: malzeme.ad, miktar: alinacakMiktar})
+    SON EĞER
+  SON DÖNGÜ
+  
+  DÖNDÜR alisverisListesi
+SON FONKSIYON
+
+
+// =============================================================================
+// YARDIMCI (HELPER) FONKSİYONLAR
+// =============================================================================
+
+// İsraf skorunu hesaplar (evdeki malzemeyi kullanma oranı)
+FONKSIYON hesaplaIsrafSkoru(recete, kiler)
+  mevcutMalzemeSayisi = 0
+  DÖNGÜ recete.malzemeler'deki her malzeme İÇİN
+    EĞER kiler.iceriyorMu(malzeme) İSE
+      mevcutMalzemeSayisi = mevcutMalzemeSayisi + 1
+    SON EĞER
+  SON DÖNGÜ
+  DÖNDÜR (mevcutMalzemeSayisi / recete.toplamMalzemeSayisi) // Oran ne kadar yüksekse o kadar iyi
+SON FONKSIYON
+
+// Lezzet skorunu hesaplar (kullanıcının profiline uygunluk)
+FONKSIYON hesaplaLezzetSkoru(recete, KullaniciProfili)
+  // Bu fonksiyon, reçetenin mutfağı (Akdeniz, İtalyan vb.) ve içerdiği
+  // lezzet profilleri (acı, ekşi vb.) ile kullanıcı profilini karşılaştırarak
+  // 0 ile 1 arasında bir skor üretir. Detaylı mantık burada yer alır.
+  skor = 0.8 // Örnek bir değer
+  DÖNDÜR skor
+SON FONKSIYON
+
+// Sanal kileri günceller
+FONKSIYON geciciKileriGuncelle(kiler, kullanilanMalzemeler)
+  DÖNGÜ kullanilanMalzemeler'deki her malzeme İÇİN
+    EĞER kiler.iceriyorMu(malzeme) İSE
+      kiler[malzeme.ad].miktar -= malzeme.miktar
+      // Eğer miktar 0 veya altına düşerse malzemeyi kilerden çıkar
+      EĞER kiler[malzeme.ad].miktar <= 0 İSE
+        kiler.kaldir(malzeme.ad)
+      SON EĞER
+    SON EĞER
+  SON DÖNGÜ
+  DÖNDÜR kiler
+SON FONKSIYON
