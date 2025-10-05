@@ -1,1 +1,117 @@
+Öğrenci No: 250541039
+AD-SOYAD:Nehir KÖKTEN
 
+Lütfen seçtiğiniz algoritmaya ait çözümü ve diğer isterleri aşağıya ekleyiniz:
+
+BAŞLA
+
+//================================================================
+// 1. OYUN KURULUMU VE DEĞİŞKENLERİN TANIMLANMASI
+//================================================================
+// Değişkenler: Oyuncuların elleri, skorları ve oyun sırasını tutar.
+DEĞİŞKEN OyuncuEli      : KART LİSTESİ
+DEĞİŞKEN BilgisayarEli   : KART LİSTESİ
+DEĞİŞKEN OyuncuSkoru     : TAMSAYI
+DEĞİŞKEN BilgisayarSkoru  : TAMSAYI
+DEĞİŞKEN SıraKimde      : METİN ("Oyuncu" veya "Bilgisayar")
+DEĞİŞKEN MasaKartları   : KART LİSTESİ // O turda oynanan kartları tutar
+
+// Başlangıç Değerleri:
+DesteyiOluşturVeKarıştır()
+OyuncuEli = DestedenKartDağıt(7)
+BilgisayarEli = DestedenKartDağıt(7)
+OyuncuSkoru = 0
+BilgisayarSkoru = 0
+SıraKimde = RastgeleSeç("Oyuncu", "Bilgisayar") // Oyuna kimin başlayacağını rastgele belirle
+
+//================================================================
+// 2. ANA OYUN DÖNGÜSÜ
+//================================================================
+// Tekrar Eden İşlem: Oyuncuların elinde kart olduğu sürece oyun devam eder.
+DÖNGÜ SÜRESİNCE (OyuncuEli'ndeki kart sayısı > 0):
+
+    YAZDIR("Yeni Tur Başladı. Skor: Oyuncu " + OyuncuSkoru + " - " + BilgisayarSkoru)
+    YAZDIR("Sıra: " + SıraKimde)
+    MasaKartları.Temizle()
+
+    DEĞİŞKEN OyuncununOynadığıKart : KART
+    DEĞİŞKEN BilgisayarınOynadığıKart : KART
+
+    //------------------------------------------------------------
+    // 2.1. TUR OYNANIŞI - KOŞULLU DURUMLAR
+    //------------------------------------------------------------
+    // Koşul: Sıranın kimde olduğuna göre oyun akışı değişir.
+    EĞER (SıraKimde == "Bilgisayar") İSE:
+        // *** STRATEJİ 1: Bilgisayar tura başlıyor ***
+        // Elindeki en yüksek kartı bul ve oyna.
+        BilgisayarınOynadığıKart = BilgisayarEli'ndekiEnYüksekKartıBul()
+        BilgisayarEli'nden(BilgisayarınOynadığıKart).Çıkar()
+        YAZDIR("Bilgisayar oynadı: " + BilgisayarınOynadığıKart.Değer)
+
+        // Sıra oyuncuya geçer
+        OyuncununOynadığıKart = OyuncudanKartSeçiminiAl(OyuncuEli)
+        OyuncuEli'nden(OyuncununOynadığıKart).Çıkar()
+        YAZDIR("Oyuncu oynadı: " + OyuncununOynadığıKart.Değer)
+
+    DEĞİLSE (SıraKimde == "Oyuncu"):
+        // Oyuncu tura başlıyor
+        OyuncununOynadığıKart = OyuncudanKartSeçiminiAl(OyuncuEli)
+        OyuncuEli'nden(OyuncununOynadığıKart).Çıkar()
+        YAZDIR("Oyuncu oynadı: " + OyuncununOynadığıKart.Değer)
+        
+        // *** STRATEJİ 2: Bilgisayar oyuncuya cevap veriyor ***
+        // Bilgisayarın elinde oyuncunun kartından daha büyük kart(lar) var mı?
+        DEĞİŞKEN YenebilecekKartlar : KART LİSTESİ
+        YenebilecekKartlar = BilgisayarEli'nde(OyuncununOynadığıKart'tan daha büyük olanları bul)
+
+        // Koşul: Kazanma ihtimali var mı?
+        EĞER (YenebilecekKartlar listesi boş DEĞİLSE) İSE:
+            // Evet, yenebilir. En değerli kartları harcamamak için
+            // yenebilecek kartların en küçüğünü oyna.
+            BilgisayarınOynadığıKart = YenebilecekKartlar'ınEnKüçüğünüBul()
+            YAZDIR("Bilgisayar, kazanmak için en mantıklı kartı oynuyor.")
+        DEĞİLSE:
+            // Hayır, yenemez. Turu kaybedeceği için en değersiz
+            // kartını feda et.
+            BilgisayarınOynadığıKart = BilgisayarEli'ndekiEnDüşükKartıBul()
+            YAZDIR("Bilgisayar, bu turu kazanamayacağı için en düşük kartını feda ediyor.")
+        
+        // Bilgisayar karar verdiği kartı oynar
+        BilgisayarEli'nden(BilgisayarınOynadığıKart).Çıkar()
+        YAZDIR("Bilgisayar cevap verdi: " + BilgisayarınOynadığıKart.Değer)
+
+    //------------------------------------------------------------
+    // 2.2. TURUN KAZANANINI BELİRLEME
+    //------------------------------------------------------------
+    DEĞİŞKEN TurunGalibi : METİN
+
+    EĞER (BilgisayarınOynadığıKart.Değer > OyuncununOynadığıKart.Değer) İSE:
+        BilgisayarSkoru = BilgisayarSkoru + 1
+        TurunGalibi = "Bilgisayar"
+    DEĞİLSE:
+        OyuncuSkoru = OyuncuSkoru + 1
+        TurunGalibi = "Oyuncu"
+    
+    YAZDIR("Bu turun galibi: " + TurunGalibi)
+
+    // Bir sonraki tura kazanan başlar
+    SıraKimde = TurunGalibi
+    BEKLE(2 saniye) // Oyunun takip edilebilmesi için kısa bir bekleme
+
+// DÖNGÜ SONU
+//================================================================
+// 3. OYUN SONU
+//================================================================
+YAZDIR("------------------")
+YAZDIR("OYUN BİTTİ!")
+YAZDIR("FİNAL SKORU: Oyuncu " + OyuncuSkoru + " - " + BilgisayarSkoru)
+
+// Nihai kazananı belirle
+EĞER (BilgisayarSkoru > OyuncuSkoru) İSE:
+    YAZDIR("Kazanan: BİLGİSAYAR!")
+DEĞİLSE EĞER (OyuncuSkoru > BilgisayarSkoru) İSE:
+    YAZDIR("Kazanan: OYUNCU! Tebrikler!")
+DEĞİLSE:
+    YAZDIR("Oyun BERABERE!")
+
+BİTİR
