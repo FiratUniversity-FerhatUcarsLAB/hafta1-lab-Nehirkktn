@@ -1,4 +1,117 @@
-Öğrenci No:
-AD-SOYAD:
+Öğrenci No:250541039
+AD-SOYAD:Nehir KÖKTEN
 
 Lütfen seçtiğiniz algoritmaya ait çözümü ve diğer isterleri aşağıya ekleyiniz:
+
+// ==========================================================
+// ANA ALGORİTMA: HEDEF RENGİ OLUŞTUR
+// ==========================================================
+BAŞLA İŞLEM HedefRengiOluştur(HedefRenk, AnaRenkler)
+
+    // --- 1. BAŞLANGIÇ DEĞERLERİNİ AYARLAMA ---
+    TANIMLA MevcutKarışım = (255, 255, 255)  // Beyaz bir başlangıç
+    TANIMLA Tolerans = 5.0                   // Ne kadar yakınlığın yeterli olduğu
+    TANIMLA AdımMiktarı = 1.0                // Her seferinde eklenecek renk birimi
+    TANIMLA MaxDenemeSayısı = 1000           // Sonsuz döngüye karşı koruma
+    TANIMLA denemeSayacı = 0                 // Döngü sayacı
+
+    // --- 2. TEKRAR EDEN İŞLEMLER (DÖNGÜ) ---
+    // Mevcut karışım hedeften yeterince uzak olduğu sürece ve deneme sayısını aşmadıkça devam et.
+    DÖNGÜ SÜRESİNCE (RenkFarkıHesapla(MevcutKarışım, HedefRenk) > Tolerans) VE (denemeSayacı < MaxDenemeSayısı)
+
+        // Mevcut ve hedef renkler arasındaki farkları her eksende (R, G, B) bul
+        fark_R = HedefRenk.R - MevcutKarışım.R
+        fark_G = HedefRenk.G - MevcutKarışım.G
+        fark_B = HedefRenk.B - MevcutKarışım.B
+
+        // Mutlak olarak en büyük fark hangi kanalda ise o rengi eklemeye öncelik ver
+        mutlakFark_R = MutlakDeğer(fark_R)
+        mutlakFark_G = MutlakDeğer(fark_G)
+        mutlakFark_B = MutlakDeğer(fark_B)
+
+        YAZDIR "Adım " + denemeSayacı + ": Mevcut Karışım = " + MevcutKarışım
+
+        // --- 3. KOŞULLU DURUMLAR (KARAR MEKANİZMASI) ---
+        // Hangi rengi ekleyeceğimize karar veriyoruz.
+        EĞER (mutlakFark_R >= mutlakFark_G) VE (mutlakFark_R >= mutlakFark_B)
+            // Kırmızı kanaldaki fark en büyükse
+            EĞER fark_R > 0  // Hedef daha kırmızı, yani kırmızı eklememiz LAZIM DEĞİL.
+                              // Katkısal modelde renkler eklenince parlaklık artar.
+                              // Bu yüzden diğer renkleri ekleyerek kırmızıyı göreceli artırırız
+                              // veya çıkarımsal modelde direkt kırmızı ekleriz.
+                              // Basitlik için, RGB'de değeri DÜŞÜREREK rengi koyulaştırırız.
+                              // Bu kısım modele göre değişir. Burada çıkarımsal gibi düşünelim:
+                YAZDIR "-> Karışıma KIRMIZI ekleniyor."
+                MevcutKarışım = RenkEkle(MevcutKarışım, (AdımMiktarı, 0, 0))
+            DEĞİLSE
+                // Bu durumu basitleştirmek için şimdilik atlıyoruz.
+        DEĞİLSE EĞER (mutlakFark_G > mutlakFark_R) VE (mutlakFark_G > mutlakFark_B)
+            // Yeşil kanaldaki fark en büyükse
+            EĞER fark_G > 0
+                YAZDIR "-> Karışıma YEŞİL ekleniyor."
+                MevcutKarışım = RenkEkle(MevcutKarışım, (0, AdımMiktarı, 0))
+            DEĞİLSE
+                // ...
+        DEĞİLSE
+            // Mavi kanaldaki fark en büyükse
+            EĞER fark_B > 0
+                YAZDIR "-> Karışıma MAVİ ekleniyor."
+                MevcutKarışım = RenkEkle(MevcutKarışım, (0, 0, AdımMiktarı))
+            DEĞİLSE
+                // ...
+        BİTİR EĞER
+
+        // Not: Rengi koyulaştırmak için Siyah, açmak için Beyaz da eklenebilir.
+        // Örnek: EĞER MevcutKarışım.Parlaklık > HedefRenk.Parlaklık
+        //           MevcutKarışım = RenkEkle(MevcutKarışım, Siyah, AdımMiktarı)
+        //        BİTİR EĞER
+
+        // Döngü sayacını artır
+        denemeSayacı = denemeSayacı + 1
+
+    BİTİR DÖNGÜ
+
+    // --- 4. SONUÇ ---
+    EĞER (denemeSayacı < MaxDenemeSayısı)
+        YAZDIR "BAŞARILI: Hedef renge ulaşıldı!"
+        YAZDIR "Son Karışım: " + MevcutKarışım
+        YAZDIR "Hedef Renk:  " + HedefRenk
+    DEĞİLSE
+        YAZDIR "BAŞARISIZ: Maksimum deneme sayısına ulaşıldı."
+        YAZDIR "Ulaşılan en yakın renk: " + MevcutKarışım
+    BİTİR EĞER
+
+BİTİR İŞLEM
+
+// ==========================================================
+// YARDIMCI FONKSİYONLAR
+// ==========================================================
+
+// İki renk arasındaki geometrik mesafeyi (farkı) hesaplar
+BAŞLA FONKSİYON RenkFarkıHesapla(renk1, renk2)
+    fark_R_karesi = (renk1.R - renk2.R) ^ 2
+    fark_G_karesi = (renk1.G - renk2.G) ^ 2
+    fark_B_karesi = (renk1.B - renk2.B) ^ 2
+    
+    DÖNDÜR Karekök(fark_R_karesi + fark_G_karesi + fark_B_karesi)
+BİTİR FONKSİYON
+
+
+// Mevcut karışıma yeni bir renk ekler (Boya karıştırma simülasyonu)
+// Bu fonksiyon, renkleri ortalama alarak birleştirir.
+BAŞLA FONKSİYON RenkEkle(karışım, eklenecekRenk)
+    // Bu kısım en zorudur ve fiziksel gerçekliğe en yakın modellemeyi gerektirir.
+    // Basit bir yaklaşım olarak, bileşenleri ortalamak yerine,
+    // hedef renge doğru bir adım atalım.
+    
+    yeni_R = karışım.R - (karışım.R - eklenecekRenk.R) * 0.05 // %5 etki
+    yeni_G = karışım.G - (karışım.G - eklenecekRenk.G) * 0.05
+    yeni_B = karışım.B - (karışım.B - eklenecekRenk.B) * 0.05
+    
+    // Değerlerin 0-255 aralığında kalmasını sağla
+    yeni_R = Sınırla(yeni_R, 0, 255)
+    yeni_G = Sınırla(yeni_G, 0, 255)
+    yeni_B = Sınırla(yeni_B, 0, 255)
+
+    DÖNDÜR (yeni_R, yeni_G, yeni_B)
+BİTİR FONKSİYON
