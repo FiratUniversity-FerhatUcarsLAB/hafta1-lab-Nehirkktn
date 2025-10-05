@@ -1,4 +1,83 @@
-Öğrenci No:
-AD-SOYAD:
+Öğrenci No: 250541039
+AD-SOYAD:Nehir KÖKTEN
 
 Lütfen seçtiğiniz algoritmaya ait çözümü ve diğer isterleri aşağıya ekleyiniz:
+
+BAŞLA
+
+// 1. ADIM: Başlangıç Ayarları ve Değişkenlerin Tanımlanması
+TANIMLA kaynak_dizin = "/path/to/düzensiz/müzikler"
+TANIMLA hedef_dizin = "/path/to/düzenli/müzikler"
+TANIMLA hatalı_dosyalar_dizini = "/path/to/hatalı_dosyalar"
+TANIMLA minimum_bitrate = 192 // Kabul edilebilir en düşük kalite (kbps)
+
+// 2. ADIM: Ana Döngü - Kaynak Dizindeki Her Dosyayı İşle
+DÖNGÜ BAŞLAT (kaynak_dizin İÇİNDEKİ HER dosya İÇİN)
+
+    // 2.1. Koşul: Dosya bir müzik dosyası mı?
+    EĞER dosya.uzantısı DEĞİLSE ("mp3", "flac", "aac", "ogg")
+        // Bu bir müzik dosyası değil, o yüzden bu dosyayı atla ve döngüde bir sonrakine geç.
+        SONRAKİ DOSYAYA GEÇ
+    SON EĞER
+
+    // 2.2. Dosyanın Metadata (Etiket) Bilgilerini Oku
+    TANIMLA metadata = oku_metadata(dosya) // Sanatçı, albüm, parça adı gibi bilgileri okuyan bir fonksiyonu temsil eder.
+    TANIMLA sanatçı = metadata.sanatçı
+    TANIMLA albüm = metadata.albüm
+    TANIMLA parça_adı = metadata.parça_adı
+    TANIMLA parça_numarası = metadata.parça_numarası
+    TANIMLA bitrate = metadata.bitrate
+
+    // 2.3. Koşul: Temel metadata bilgileri eksik mi?
+    EĞER sanatçı BOŞ VEYA albüm BOŞ VEYA parça_adı BOŞ İSE
+        YAZ ("Eksik metadata: " + dosya.adı)
+        taşı(dosya, hatalı_dosyalar_dizini) // Dosyayı incelenmek üzere hatalı dosyalar klasörüne taşı.
+        SONRAKİ DOSYAYA GEÇ // Bu dosyayı atla.
+    SON EĞER
+
+    // 2.4. Koşul: Müzik kalitesi yeterli mi?
+    EĞER bitrate < minimum_bitrate İSE
+        YAZ ("Düşük kalite tespit edildi: " + dosya.adı + " (" + bitrate + "kbps)")
+        taşı(dosya, hatalı_dosyalar_dizini + "/düşük_kalite") // Düşük kaliteli dosyaları ayrı bir yere taşı.
+        SONRAKİ DOSYAYA GEÇ
+    SON EĞER
+
+    // 2.5. Yeni Dosya Yolu ve Adını Oluşturma
+    // Parça numarasını iki haneli yapmak için (ör: 7 -> 07)
+    TANIMLA formatlanmış_parça_numarası
+    EĞER parça_numarası < 10 İSE
+        formatlanmış_parça_numarası = "0" + parça_numarası
+    DEĞİLSE
+        formatlanmış_parça_numarası = parça_numarası
+    SON EĞER
+
+    // Geçersiz karakterleri temizle (Windows/Linux/Mac uyumlu olması için)
+    sanatçı = temizle_geçersiz_karakterler(sanatçı)
+    albüm = temizle_geçersiz_karakterler(albüm)
+    parça_adı = temizle_geçersiz_karakterler(parça_adı)
+
+    TANIMLA yeni_klasor_yolu = hedef_dizin + "/" + sanatçı + "/" + albüm
+    TANIMLA yeni_dosya_adı = formatlanmış_parça_numarası + " - " + parça_adı + "." + dosya.uzantısı
+    TANIMLA tam_hedef_yol = yeni_klasor_yolu + "/" + yeni_dosya_adı
+
+    // 2.6. Koşul: Hedef klasör mevcut mu? Değilse oluştur.
+    EĞER klasör_mevcut_değilse(yeni_klasor_yolu)
+        oluştur_klasor(yeni_klasor_yolu)
+    SON EĞER
+
+    // 2.7. Koşul: Dosya hedefte zaten var mı? (Yinelenen dosya kontrolü)
+    EĞER dosya_mevcutsa(tam_hedef_yol)
+        YAZ ("Yinelenen dosya atlandı: " + dosya.adı)
+    DEĞİLSE
+        // Dosyayı yeni adıyla yeni konumuna taşı
+        taşı_ve_yeniden_adlandır(dosya, tam_hedef_yol)
+        YAZ ("Taşındı: " + dosya.adı + " -> " + tam_hedef_yol)
+    SON EĞER
+
+DÖNGÜ SONU
+
+// 3. ADIM: İşlemi Bitir
+YAZ ("Müzik koleksiyonu düzenleme işlemi tamamlandı.")
+YAZ ("Hatalı veya eksik etiketli dosyalar '" + hatalı_dosyalar_dizini + "' klasörüne taşındı.")
+
+BİTİR
