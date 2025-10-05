@@ -1,1 +1,99 @@
+Öğrenci No: 250541039
+AD-SOYAD:Nehir KÖKTEN
 
+Lütfen seçtiğiniz algoritmaya ait çözümü ve diğer isterleri aşağıya ekleyiniz:
+
+BAŞLA
+
+// --- 1. DEĞİŞKENLERİN TANIMLANMASI ---
+DEĞİŞKEN enYüksekSkor = 0
+DEĞİŞKEN mevcutSkor = 0
+DEĞİŞKEN denemeSayısı = 0
+DEĞİŞKEN oyunDurumu = "başlamadı"
+DEĞİŞKEN strateji = { temel: "güvenli oyna", riskli: "yüksek puan için risk al" }
+DEĞİŞKEN öğrenilenDersler = [] // Her deneme sonrası notlar
+
+// --- 2. HAZIRLIK VE ANALİZ FAZI ---
+FONKSİYON HazırlıkYap():
+    // Bu fonksiyon sadece bir kere çalıştırılır.
+    Yazdır("Oyunun kuralları ve skor mekanikleri öğreniliyor...")
+    OyununKılavuzunuOku()
+    YüksekPuanVerenHareketleriAnalizEt("kombolar", "özel eşyalar", "zaman bonusları")
+    ProfesyonelOyuncularınVideolarınıİzle()
+    enYüksekSkor = KayıtlıSkoruYükle() // Varsa eski rekoru yükle
+    Yazdır("Hazırlık tamamlandı. Mevcut rekor: " + enYüksekSkor)
+BİTİR FONKSİYON
+
+// --- 3. ANA OYUN DÖNGÜSÜ ---
+// Bu döngü, yeni bir rekor kırma hedefi devam ettiği sürece çalışır.
+HazırlıkYap()
+DÖNGÜ SÜRESİNCE (Kullanıcı oynamak istiyor):
+
+    denemeSayısı = denemeSayısı + 1
+    mevcutSkor = 0
+    oyunDurumu = "devam ediyor"
+    Yazdır(denemeSayısı + ". deneme başlıyor!")
+
+    // --- 3.1. TEK BİR OYUN İÇİ DÖNGÜSÜ ---
+    // Bu döngü, mevcut oyun bitene kadar (can kalmaması, süre bitmesi vb.) devam eder.
+    DÖNGÜ SÜRESİNCE (oyunDurumu == "devam ediyor"):
+
+        // Anlık oyun durumunu değerlendir
+        mevcutDurum = OyundanVeriAl() // Can, enerji, düşman konumu, bonuslar vb.
+
+        // --- 3.2. KOŞULLU KARAR VERME BLOKLARI ---
+        // Fırsatları değerlendir
+        EĞER (mevcutDurum'da "çoklu düşman" VE mevcutDurum'da "özel güç hazır"):
+            ÖzelGücüKullan()
+            mevcutSkor = mevcutSkor + (100 * mevcutDurum'daki düşman sayısı) // Örnek skor artışı
+            Yazdır("Özel güç kullanıldı! Yüksek kombo puanı!")
+
+        // Risk analizi yap
+        DEĞİLSE EĞER (mevcutDurum'da "riskli ama yüksek puanlı bonus"):
+            // Riski alıp almamaya karar ver
+            EĞER (mevcutDurum'daki canSayısı > 1):
+                // Can sayısı birden fazlaysa riski göze al
+                RiskliHareketiYap("bonusu al")
+                mevcutSkor = mevcutSkor + 500 // Örnek bonus puanı
+                Yazdır("Risk alındı ve bonus kazanıldı!")
+            DEĞİLSE:
+                // Can sayısı azsa güvenli oyna
+                GüvenliYoldanDevamEt()
+                Yazdır("Risk alınmadı, güvenli oyun tercih edildi.")
+            SON EĞER
+
+        // Temel oyun akışı
+        DEĞİLSE:
+            TemelOyunStratejisiniUygula(strateji.temel)
+            mevcutSkor = mevcutSkor + 10 // Standart ilerleme puanı
+        SON EĞER
+
+        // Oyunun bitip bitmediğini kontrol et
+        EĞER (mevcutDurum'daki canSayısı == 0 VEYA mevcutDurum'daki süre == 0):
+            oyunDurumu = "bitti"
+        SON EĞER
+
+    SON DÖNGÜ // Tek bir oyun içi döngüsü bitti
+
+    // --- 4. DEĞERLENDİRME VE GELİŞTİRME FAZI ---
+    Yazdır("Oyun bitti! Skorun: " + mevcutSkor)
+
+    EĞER (mevcutSkor > enYüksekSkor):
+        enYüksekSkor = mevcutSkor
+        YeniRekoruKaydet(enYüksekSkor)
+        Yazdır("TEBRİKLER! Yeni Yüksek Skor: " + enYüksekSkor)
+        öğrenilenDersler.Ekle("Bu denemede " + başarılıOlanTaktik + " işe yaradı.")
+    DEĞİLSE:
+        Yazdır("Rekor kırılamadı. Mevcut rekor: " + enYüksekSkor)
+        başarısızlıkNedeni = HatanınYapıldığıAnıAnalizEt()
+        öğrenilenDersler.Ekle("Bu denemede " + başarısızlıkNedeni + " yüzünden puan kaybedildi.")
+        StratejiyiGözdenGeçir(öğrenilenDersler) // Öğrenilenlere göre stratejiyi güncelle
+    SON EĞER
+
+    KullanıcıyaSor("Tekrar denemek ister misin? (evet/hayır)")
+
+SON DÖNGÜ // Ana oyun döngüsü bitti
+
+Yazdır("Algoritma tamamlandı. Nihai en yüksek skor: " + enYüksekSkor)
+
+BİTİR
